@@ -1,6 +1,7 @@
 from __future__ import division
 import torch
 import torch.nn.functional as F
+import copy
 from torch.autograd import Variable
 
 
@@ -56,7 +57,7 @@ class Agent(object):
 
         if self.episodic_reward == LATE_GAME_SCORE_DELTA:
             if self.late_game_model is None:
-                self.late_game_model = self.early_game_model.copy()
+                self.late_game_model = copy.deepcopy(self.early_game_model)
             self.model = self.late_game_model
         elif self.episodic_reward == SECOND_LAYOUT_SCORE:
             self.model = self.early_game_model
@@ -104,7 +105,7 @@ class Agent(object):
 
         if self.episodic_reward == LATE_GAME_SCORE_DELTA:
             if self.late_game_model is None:
-                self.late_game_model = self.early_game_model.copy()
+                self.late_game_model = copy.deepcopy(self.early_game_model)
             self.model = self.late_game_model
         elif self.episodic_reward == SECOND_LAYOUT_SCORE:
             self.model = self.early_game_model
