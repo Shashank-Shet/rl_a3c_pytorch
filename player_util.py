@@ -31,6 +31,11 @@ class Agent(object):
         self.episodic_reward = 0
         self.life_counter = 5
 
+    def test_models(self):
+        print(self.model)
+        print(self.early_game_model)
+        print(self.late_game_model)
+
     def set_model(self, model):
         self.model = model
         self.early_game_model = self.model
