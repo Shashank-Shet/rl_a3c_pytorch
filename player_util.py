@@ -6,7 +6,7 @@ from torch.autograd import Variable
 
 
 SECOND_LAYOUT_SCORE = 432
-LATE_GAME_SCORE_DELTA = 1
+LATE_GAME_SCORE_DELTA = 300
 
 
 class Agent(object):
