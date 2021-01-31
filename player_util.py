@@ -5,7 +5,7 @@ from torch.autograd import Variable
 
 
 SECOND_LAYOUT_SCORE = 432
-LATE_GAME_SCORE_DELTA = 300
+LATE_GAME_SCORE_DELTA = 1
 
 
 class Agent(object):
@@ -33,7 +33,7 @@ class Agent(object):
     def set_model(self, model):
         self.model = model
         self.early_game_model = self.model
-        
+
     def action_train(self):
         value, logit, (self.hx, self.cx) = self.model((Variable(
             self.state.unsqueeze(0)), (self.hx, self.cx)))
@@ -49,7 +49,7 @@ class Agent(object):
         if self.done is True:
             self.life_counter -= 1
             if self.life_counter == 0:
-                print("Episodic reward: ", self.episodic_reward)
+#                print("Episodic reward: ", self.episodic_reward)
                 self.episodic_reward = 0
                 self.life_counter = 5
         self.episodic_reward += self.reward
@@ -97,7 +97,7 @@ class Agent(object):
         if self.done is True:
             self.life_counter -= 1
             if self.life_counter == 0:
-                print("Episodic reward: ", self.episodic_reward)
+ #               print("Episodic reward: ", self.episodic_reward)
                 self.episodic_reward = 0
                 self.life_counter = 5
         self.episodic_reward += self.reward
