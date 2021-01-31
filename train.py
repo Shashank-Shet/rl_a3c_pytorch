@@ -39,7 +39,7 @@ def train(rank, args, shared_model, optimizer, env_conf):
             player.model = player.model.cuda()
     player.model.train()
     player.eps_len += 2
-    player.test_models()
+#    player.test_models()
     while True:
         if gpu_id >= 0:
             with torch.cuda.device(gpu_id):

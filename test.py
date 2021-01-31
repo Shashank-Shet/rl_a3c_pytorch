@@ -32,9 +32,10 @@ def test(args, shared_model, env_conf):
     reward_total_sum = 0
     player = Agent(None, env, args, None)
     player.gpu_id = gpu_id
-    player.model = A3Clstm(player.env.observation_space.shape[0],
-                           player.env.action_space)
-
+#    player.model = A3Clstm(player.env.observation_space.shape[0],
+#                           player.env.action_space)
+    player.set_model(A3Clstm(player.env.observation_space.shape[0],
+                           player.env.action_space))
     player.state = player.env.reset()
     player.eps_len += 2
     player.state = torch.from_numpy(player.state).float()
