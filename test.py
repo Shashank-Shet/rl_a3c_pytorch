@@ -10,7 +10,7 @@ import time
 import logging
 
 
-def test(args, shared_model, env_conf):
+def test(args, shared_models, env_conf):
     ptitle('Test Agent')
     gpu_id = args.gpu_ids[-1]
     log = {}
@@ -49,10 +49,13 @@ def test(args, shared_model, env_conf):
         if flag:
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
-                    player.model.load_state_dict(shared_model.state_dict())
+                    player.early_game_model.load_state_dict(shared_models[0].state_dict())
+                    player.late_game_model.load_state_dict(shared_models[1].state_dict())
             else:
-                player.model.load_state_dict(shared_model.state_dict())
-            player.model.eval()
+                player.early_game_model.load_state_dict(shared_models[0].state_dict())
+                player.late_game_model.load_state_dict(shared_models[1].state_dict())
+            player.early_game_model.eval()
+            player.late_game_model.eval()
             flag = False
 
         player.action_test()

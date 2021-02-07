@@ -1,0 +1,22 @@
+2021-02-07 19:04:01,382 : lr: 0.0001
+2021-02-07 19:04:01,383 : gamma: 0.99
+2021-02-07 19:04:01,383 : tau: 1.0
+2021-02-07 19:04:01,383 : seed: 1
+2021-02-07 19:04:01,383 : workers: 2
+2021-02-07 19:04:01,383 : num_steps: 20
+2021-02-07 19:04:01,383 : max_episode_length: 10000
+2021-02-07 19:04:01,383 : env: Breakout-v0
+2021-02-07 19:04:01,383 : env_config: config.json
+2021-02-07 19:04:01,383 : shared_optimizer: True
+2021-02-07 19:04:01,383 : load: False
+2021-02-07 19:04:01,383 : save_max: True
+2021-02-07 19:04:01,384 : optimizer: Adam
+2021-02-07 19:04:01,384 : load_model_dir: trained_models/
+2021-02-07 19:04:01,384 : save_model_dir: trained_models/
+2021-02-07 19:04:01,384 : log_dir: logs/
+2021-02-07 19:04:01,384 : gpu_ids: [-1]
+2021-02-07 19:04:01,384 : amsgrad: True
+2021-02-07 19:04:01,384 : skip_rate: 4
+2021-02-07 19:04:05,252 : Time 00h 00m 03s, episode reward 2.0, episode length 262, reward mean 2.0000
+2021-02-07 19:04:19,242 : Time 00h 00m 17s, episode reward 2.0, episode length 264, reward mean 2.0000
+2021-02-07 19:04:31,620 : Time 00h 00m 29s, episode reward 0.0, episode length 163, reward mean 1.3333
