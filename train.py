@@ -145,18 +145,18 @@ def train(rank, args, shared_models, optimizers, env_conf):
             P_vec[model_id] = policy_loss
             V_vec[model_id] = value_loss
 
-        player.models[0].zero_grad()
-        player.models[1].zero_grad()
         if P_vec[0] is not None:
+            player.models[0].zero_grad()
             (P_vec[0] + 0.5 * V_vec[0]).backward()
+            ensure_shared_grads(player.models[0], shared_models[0], gpu = gpu_id >= 0)
+            optimizers[0].step()
         if P_vec[1] is not None:
+            player.models[1].zero_grad()
             (P_vec[1] + 0.5 * V_vec[1]).backward()
-        print(shared_models[0])
-        print(shared_models[1])
-        ensure_shared_grads(player.models[0], shared_models[0], gpu = gpu_id >= 0)
-        ensure_shared_grads(player.models[1], shared_models[1], gpu = gpu_id >= 0)
-        optimizers[0].step()
-        optimizers[1].step()
+            ensure_shared_grads(player.models[1], shared_models[1], gpu = gpu_id >= 0)
+            optimizers[1].step()
+        # print(shared_models[0])
+        # print(shared_models[1])
 
             
         # for i in reversed(range(len(player.rewards))):
