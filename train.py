@@ -43,6 +43,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
             player.state = player.state.cuda()
             player.early_game_model = player.early_game_model.cuda()
             player.late_game_model = player.late_game_model.cuda()
+            player.models = [player.early_game_model, player.late_game_model]
     # player.model.train()
     player.early_game_model.train()
     player.late_game_model.train()

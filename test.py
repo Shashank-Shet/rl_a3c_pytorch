@@ -41,7 +41,9 @@ def test(args, shared_models, env_conf):
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
-            player.model = player.model.cuda()
+            player.early_game_model = player.early_game_model.cuda()
+            player.late_game_model  = player.late_game_model.cuda()
+            player.models = [player.early_game_model, player.late_game_model]
             player.state = player.state.cuda()
     flag = True
     max_score = 0
