@@ -150,6 +150,8 @@ def train(rank, args, shared_models, optimizers, env_conf):
             (P_vec[0] + 0.5 * V_vec[0]).backward()
         if P_vec[1] is not None:
             (P_vec[1] + 0.5 * V_vec[1]).backward()
+        print(shared_models[0])
+        print(shared_models[1])
         ensure_shared_grads(player.models[0], shared_models[0], gpu = gpu_id >= 0)
         ensure_shared_grads(player.models[1], shared_models[1], gpu = gpu_id >= 0)
         optimizers[0].step()
