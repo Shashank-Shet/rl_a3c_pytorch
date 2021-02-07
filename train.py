@@ -41,7 +41,8 @@ def train(rank, args, shared_models, optimizers, env_conf):
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
             player.state = player.state.cuda()
-            player.model = player.model.cuda()
+            player.early_game_model = player.early_game_model.cuda()
+            player.late_game_model = player.late_game_model.cuda()
     # player.model.train()
     player.early_game_model.train()
     player.late_game_model.train()
