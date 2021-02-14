@@ -55,6 +55,8 @@ def train(rank, args, shared_models, optimizers, env_conf):
             if player.done:
                 break
 
+        player.episodic_reward = 0
+
         if player.done:
             state = player.env.reset()
             player.state = torch.from_numpy(state).float()

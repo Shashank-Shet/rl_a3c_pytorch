@@ -65,7 +65,7 @@ class Agent(object):
         state, self.reward, self.done, self.info = self.env.step(aid)
 
         self.fire_action_next = self.done
-        
+        self.episodic_reward += self.reward
         # if self.rank == 1:
         #     print(aid)
         # Extra code to switch between models based on score
@@ -119,6 +119,8 @@ class Agent(object):
         # sleep(0.005)
         # print(f"ACTION: {action[0]} DONE? {self.done}  INFO: {self.info}")
 
+        self.episodic_reward += self.reward
+        
         if self.episodic_reward == 0:
             self.curr_model_id = 0
         elif self.episodic_reward == GAME_STAGE_CHANGEOVER_THRESHOLD:

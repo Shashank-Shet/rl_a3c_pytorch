@@ -78,6 +78,7 @@ def test(args, shared_models, env_conf):
                 line = f"{reward_total_sum - prev_reward}\n"
                 f.write(line)
                 prev_reward = reward_total_sum
+            player.episodic_reward = 0
             if args.save_max and reward_sum >= max_score:
                 max_score = reward_sum
                 if gpu_id >= 0:
