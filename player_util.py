@@ -21,6 +21,13 @@ class Agent(object):
         self.info = None
         self.reward = 0
         self.gpu_id = -1
+        ########### User Defined ############
+        self.next_action_fire = True
+        self.episodic_reward = 0
+        self.life_counter = 0
+        with open('./results', 'w') as f:
+            pass
+        #####################################
 
     def action_train(self):
         value, logit, (self.hx, self.cx) = self.model((Variable(
@@ -61,8 +68,23 @@ class Agent(object):
             value, logit, (self.hx, self.cx) = self.model((Variable(
                 self.state.unsqueeze(0)), (self.hx, self.cx)))
         prob = F.softmax(logit, dim=1)
-        action = prob.max(1)[1].data.cpu().numpy()
+        if self.next_action_fire is False:
+            action = prob.max(1)[1].data.cpu().numpy()
+        else:
+            action = [1]
         state, self.reward, self.done, self.info = self.env.step(action[0])
+        ################ Custom code ################
+        self.next_action_fire = self.done
+        if self.done:
+            self.life_counter -= 1
+            if self.life_counter == 0:
+                with open('./results', 'a') as f:
+                    line = f"{self.episodic_reward}\n"
+                    f.write(line)
+                self.episodic_reward = 0
+                self.life_counter = 5
+        self.episodic_reward += self.reward
+        #############################################
         self.state = torch.from_numpy(state).float()
         if self.gpu_id >= 0:
             with torch.cuda.device(self.gpu_id):
