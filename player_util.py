@@ -41,6 +41,7 @@ class Agent(object):
         self.model_sequence = []
         self.curr_model_id = 0
         self.first_time_changeover = True
+        self.fire_action_next = True
         if self.gpu_id >= 0:
             with torch.cuda.device(self.gpu_id):
                 self.models[0] = self.models[0].cuda()
@@ -57,9 +58,16 @@ class Agent(object):
         self.entropies.append(entropy)
         action = prob.multinomial(1).data
         log_prob = log_prob.gather(1, Variable(action))
-        state, self.reward, self.done, self.info = self.env.step(
-            action.cpu().numpy())
+        if self.fire_action_next is True:
+            aid = 1
+        else:
+            aid = action.cpu().numpy()
+        state, self.reward, self.done, self.info = self.env.step(aid)
 
+        self.fire_action_next = self.done
+        
+        # if self.rank == 1:
+        #     print(aid)
         # Extra code to switch between models based on score
         if self.episodic_reward == 0:
             self.curr_model_id = 0
@@ -102,7 +110,10 @@ class Agent(object):
             value, logit, (self.hx, self.cx) = self.models[self.curr_model_id]((Variable(
                 self.state.unsqueeze(0)), (self.hx, self.cx)))
         prob = F.softmax(logit, dim=1)
-        action = prob.max(1)[1].data.cpu().numpy()
+        if self.fire_action_next is True:
+            action = [1]
+        else:
+            action = prob.max(1)[1].data.cpu().numpy()
         state, self.reward, self.done, self.info = self.env.step(action[0])
         # self.env.render()
         # sleep(0.005)

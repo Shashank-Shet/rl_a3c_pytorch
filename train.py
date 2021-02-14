@@ -18,7 +18,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
     env = atari_env(args.env, env_conf, args)
     env.seed(args.seed + rank)
     player = Agent(env, args, gpu_id)
-
+    player.rank = rank
     player.state = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
