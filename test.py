@@ -44,6 +44,7 @@ def test(args, shared_model, env_conf):
             player.state = player.state.cuda()
     flag = True
     max_score = 0
+    prev_reward = 0
     while True:
         if flag:
             if gpu_id >= 0:
@@ -58,6 +59,8 @@ def test(args, shared_model, env_conf):
         reward_sum += player.reward
 
         if player.done and not player.info:
+            # # player.life_counter = 5
+            # pass
             state = player.env.reset()
             player.eps_len += 2
             player.state = torch.from_numpy(state).float()
@@ -68,6 +71,12 @@ def test(args, shared_model, env_conf):
             flag = True
             num_tests += 1
             reward_total_sum += reward_sum
+            ################ User added ###############
+            with open('./results', 'a') as f:
+                line = f"{reward_total_sum - prev_reward}\n"
+                f.write(line)
+            prev_reward = reward_total_sum
+            ###########################################
             reward_mean = reward_total_sum / num_tests
             log['{}_log'.format(args.env)].info(
                 "Time {0}, episode reward {1}, episode length {2}, reward mean {3:.4f}".
