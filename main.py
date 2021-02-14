@@ -134,44 +134,33 @@ if __name__ == '__main__':
         if i in args.env:
             env_conf = setup_json[i]
     env = atari_env(args.env, env_conf, args)
-    shared_models = [
-        A3Clstm(env.observation_space.shape[0], env.action_space),
-        A3Clstm(env.observation_space.shape[0], env.action_space)
-    ]
+    shared_model = A3Clstm(env.observation_space.shape[0], env.action_space)
     if args.load:
         saved_state = torch.load(
             '{0}{1}.dat'.format(args.load_model_dir, args.env),
             map_location=lambda storage, loc: storage)
-        shared_models[0].load_state_dict(saved_state)
-        shared_models[1].load_state_dict(saved_state)
-    shared_models[0].share_memory()
-    shared_models[1].share_memory()
+        shared_model.load_state_dict(saved_state)
+    shared_model.share_memory()
 
     if args.shared_optimizer:
         if args.optimizer == 'RMSprop':
-            optimizers = [
-                SharedRMSprop(shared_models[0].parameters(), lr=args.lr),
-                SharedRMSprop(shared_models[1].parameters(), lr=args.lr)
-            ]
+            optimizer = SharedRMSprop(shared_model.parameters(), lr=args.lr)
         if args.optimizer == 'Adam':
-            optimizers = [
-                SharedAdam(shared_models[0].parameters(), lr=args.lr, amsgrad=args.amsgrad),
-                SharedAdam(shared_models[1].parameters(), lr=args.lr, amsgrad=args.amsgrad)
-            ]
-        optimizers[0].share_memory()
-        optimizers[1].share_memory()
+            optimizer = SharedAdam(
+                shared_model.parameters(), lr=args.lr, amsgrad=args.amsgrad)
+        optimizer.share_memory()
     else:
-        optimizers = None
+        optimizer = None
 
     processes = []
 
-    p = mp.Process(target=test, args=(args, shared_models, env_conf))
+    p = mp.Process(target=test, args=(args, shared_model, env_conf))
     p.start()
     processes.append(p)
     time.sleep(0.1)
     for rank in range(0, args.workers):
         p = mp.Process(
-            target=train, args=(rank, args, shared_models, optimizers, env_conf))
+            target=train, args=(rank, args, shared_model, optimizer, env_conf))
         p.start()
         processes.append(p)
         time.sleep(0.1)

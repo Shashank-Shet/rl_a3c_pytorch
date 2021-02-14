@@ -10,7 +10,7 @@ import time
 import logging
 
 
-def test(args, shared_models, env_conf):
+def test(args, shared_model, env_conf):
     ptitle('Test Agent')
     gpu_id = args.gpu_ids[-1]
     log = {}
@@ -32,18 +32,15 @@ def test(args, shared_models, env_conf):
     reward_total_sum = 0
     player = Agent(None, env, args, None)
     player.gpu_id = gpu_id
-#    player.model = A3Clstm(player.env.observation_space.shape[0],
-#                           player.env.action_space)
-    player.set_model(A3Clstm(player.env.observation_space.shape[0],
-                           player.env.action_space))
+    player.model = A3Clstm(player.env.observation_space.shape[0],
+                           player.env.action_space)
+
     player.state = player.env.reset()
     player.eps_len += 2
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
-            player.early_game_model = player.early_game_model.cuda()
-            player.late_game_model  = player.late_game_model.cuda()
-            player.models = [player.early_game_model, player.late_game_model]
+            player.model = player.model.cuda()
             player.state = player.state.cuda()
     flag = True
     max_score = 0
@@ -51,13 +48,10 @@ def test(args, shared_models, env_conf):
         if flag:
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
-                    player.early_game_model.load_state_dict(shared_models[0].state_dict())
-                    player.late_game_model.load_state_dict(shared_models[1].state_dict())
+                    player.model.load_state_dict(shared_model.state_dict())
             else:
-                player.early_game_model.load_state_dict(shared_models[0].state_dict())
-                player.late_game_model.load_state_dict(shared_models[1].state_dict())
-            player.early_game_model.eval()
-            player.late_game_model.eval()
+                player.model.load_state_dict(shared_model.state_dict())
+            player.model.eval()
             flag = False
 
         player.action_test()
