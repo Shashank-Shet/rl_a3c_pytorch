@@ -159,4 +159,11 @@ def train(rank, args, shared_models, optimizers, env_conf):
                 optimizers[1].step()
         except Exception as e:
             print("Exception caught. Ignoring")
+            state = player.env.reset()
+            # print("Game Resetting")
+            player.state = torch.from_numpy(state).float()
+            if gpu_id >= 0:
+                with torch.cuda.device(gpu_id):
+                    player.state = player.state.cuda()
+                    
         player.clear_actions()
