@@ -3,13 +3,14 @@ import torch
 import torch.nn.functional as F
 import copy
 from torch.autograd import Variable
+from time import sleep
 
 
-SECOND_LAYOUT_SCORE = 432
-LATE_GAME_SCORE_DELTA = 300
+TILES_REFILL_THRESHOLD_SCORE = 432
+GAME_STAGE_CHANGEOVER_THRESHOLD = 300
 
-# SECOND_LAYOUT_SCORE = 1
-# LATE_GAME_SCORE_DELTA = 1
+# TILES_REFILL_THRESHOLD_SCORE = 1
+# GAME_STAGE_CHANGEOVER_THRESHOLD = 1
 
 
 class Agent(object):
@@ -36,6 +37,8 @@ class Agent(object):
         self.life_counter = 5
         self.model_sequence = []
         self.curr_model_id = 0
+        self.first_time_changeover = True
+        self.next_action_fire = False
 
     def test_models(self):
         print(self.model)
@@ -61,27 +64,25 @@ class Agent(object):
             action.cpu().numpy())
 
         # Extra code for book-keeping progress of rewards in training.
+        # Note: Training allows only 1 life for the agent
         if self.done is True:
-            self.life_counter -= 1
-            if self.life_counter == 0:
-#                print("Episodic reward: ", self.episodic_reward)
-                self.episodic_reward = 0
-                self.life_counter = 5
+            self.life_counter = 0
         self.episodic_reward += self.reward
 
         # Extra code to switch between models based on score
         if self.episodic_reward == 0:
             self.model = self.early_game_model
             self.curr_model_id = 0
-        elif self.episodic_reward == LATE_GAME_SCORE_DELTA:
-            if self.late_game_model is None:
+        elif self.episodic_reward == GAME_STAGE_CHANGEOVER_THRESHOLD:
+            if self.first_time_changeover:
                 self.late_game_model = copy.deepcopy(self.early_game_model)
+                self.first_time_changeover = False
             self.model = self.late_game_model
             self.curr_model_id = 1
-        elif self.episodic_reward == SECOND_LAYOUT_SCORE:
+        elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE:
             self.model = self.early_game_model
             self.curr_model_id = 0
-        elif self.episodic_reward == SECOND_LAYOUT_SCORE + LATE_GAME_SCORE_DELTA:
+        elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE + GAME_STAGE_CHANGEOVER_THRESHOLD:
             self.model = self.late_game_model
             self.curr_model_id = 1
 
@@ -114,30 +115,41 @@ class Agent(object):
             value, logit, (self.hx, self.cx) = self.model((Variable(
                 self.state.unsqueeze(0)), (self.hx, self.cx)))
         prob = F.softmax(logit, dim=1)
-        action = prob.max(1)[1].data.cpu().numpy()
+        if self.next_action_fire is False:
+            action = prob.max(1)[1].data.cpu().numpy()
+        else:
+            action = [1]
         state, self.reward, self.done, self.info = self.env.step(action[0])
+        # self.env.render()
+        # sleep(0.005)
+        # print(f"ACTION: {action[0]} DONE? {self.done}  INFO: {self.info}")
 
         if self.done is True:
+            self.next_action_fire = True
             self.life_counter -= 1
             if self.life_counter == 0:
  #               print("Episodic reward: ", self.episodic_reward)
                 self.episodic_reward = 0
                 self.life_counter = 5
+        else:
+            self.next_action_fire = False
+
         self.episodic_reward += self.reward
 
 
         if self.episodic_reward == 0:
             self.model = self.early_game_model
             self.curr_model_id = 0
-        elif self.episodic_reward == LATE_GAME_SCORE_DELTA:
-            if self.late_game_model is None:
-                self.late_game_model = copy.deepcopy(self.early_game_model)
+        elif self.episodic_reward == GAME_STAGE_CHANGEOVER_THRESHOLD:
+            # if self.first_time_changeover:
+            #     self.late_game_model = copy.deepcopy(self.early_game_model)
+            #     self.first_time_changeover = False
             self.model = self.late_game_model
             self.curr_model_id = 1
-        elif self.episodic_reward == SECOND_LAYOUT_SCORE:
+        elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE:
             self.model = self.early_game_model
             self.curr_model_id = 0
-        elif self.episodic_reward == SECOND_LAYOUT_SCORE + LATE_GAME_SCORE_DELTA:
+        elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE + GAME_STAGE_CHANGEOVER_THRESHOLD:
             self.model = self.late_game_model
             self.curr_model_id = 1
 
@@ -154,5 +166,5 @@ class Agent(object):
         self.log_probs = []
         self.rewards = []
         self.entropies = []
-        self.model_sequence.clear()
+        self.model_sequence = []
         return self

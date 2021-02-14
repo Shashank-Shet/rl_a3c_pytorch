@@ -78,6 +78,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
 
         if player.done:
             state = player.env.reset()
+            # print("Game Resetting")
             player.state = torch.from_numpy(state).float()
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
@@ -155,27 +156,4 @@ def train(rank, args, shared_models, optimizers, env_conf):
             (P_vec[1] + 0.5 * V_vec[1]).backward()
             ensure_shared_grads(player.models[1], shared_models[1], gpu = gpu_id >= 0)
             optimizers[1].step()
-        # print(shared_models[0])
-        # print(shared_models[1])
-
-            
-        # for i in reversed(range(len(player.rewards))):
-        #     R = args.gamma * R + player.rewards[i]
-        #     advantage = R - player.values[i]
-        #     value_loss = value_loss + 0.5 * advantage.pow(2)
-
-        #     # Generalized Advantage Estimataion
-        #     delta_t = player.rewards[i] + args.gamma * \
-        #         player.values[i + 1].data - player.values[i].data
-
-        #     gae = gae * args.gamma * args.tau + delta_t
-
-        #     policy_loss = policy_loss - \
-        #         player.log_probs[i] * \
-        #         Variable(gae) - 0.01 * player.entropies[i]
-
-        # player.model.zero_grad()
-        # (policy_loss + 0.5 * value_loss).backward()
-        # ensure_shared_grads(player.model, shared_model, gpu=gpu_id >= 0)
-        # optimizer.step()
         player.clear_actions()
