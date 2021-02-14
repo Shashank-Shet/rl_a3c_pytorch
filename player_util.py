@@ -115,10 +115,10 @@ class Agent(object):
         else:
             action = prob.max(1)[1].data.cpu().numpy()
         state, self.reward, self.done, self.info = self.env.step(action[0])
-        # self.env.render()
-        # sleep(0.005)
-        # print(f"ACTION: {action[0]} DONE? {self.done}  INFO: {self.info}")
-
+        self.env.render()
+        sleep(0.005)
+        print(f"ACTION: {action[0]} DONE? {self.done}  INFO: {self.info}")
+        self.fire_action_next = self.done
         self.episodic_reward += self.reward
         
         if self.episodic_reward == 0:
