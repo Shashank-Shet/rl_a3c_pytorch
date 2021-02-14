@@ -16,49 +16,28 @@ def train(rank, args, shared_models, optimizers, env_conf):
     if gpu_id >= 0:
         torch.cuda.manual_seed(args.seed + rank)
     env = atari_env(args.env, env_conf, args)
-    if optimizers is None:
-        if args.optimizer == 'RMSprop':
-            optimizers = [
-                optim.RMSprop(shared_models[0].parameters(), lr=args.lr),
-                optim.RMSprop(shared_models[1].parameters(), lr=args.lr)
-            ]
-        if args.optimizer == 'Adam':
-            optimizers = [
-                optim.Adam(shared_models[0].parameters(), lr=args.lr, amsgrad=args.amsgrad),
-                optim.Adam(shared_models[1].parameters(), lr=args.lr, amsgrad=args.amsgrad)
-            ]
     env.seed(args.seed + rank)
-    player = Agent(None, env, args, None)
-    player.gpu_id = gpu_id
-    player.set_model(A3Clstm(player.env.observation_space.shape[0],
-                           player.env.action_space))
-
-#    player.model = A3Clstm(player.env.observation_space.shape[0],
-#                           player.env.action_space)
+    player = Agent(env, args, gpu_id)
 
     player.state = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
             player.state = player.state.cuda()
-            player.early_game_model = player.early_game_model.cuda()
-            player.late_game_model = player.late_game_model.cuda()
-            player.models = [player.early_game_model, player.late_game_model]
-    # player.model.train()
-    player.early_game_model.train()
-    player.late_game_model.train()
+    player.models[0].train()
+    player.models[1].train()
     player.eps_len += 2
 #    player.test_models()
     while True:
         if gpu_id >= 0:
             with torch.cuda.device(gpu_id):
                 # player.model.load_state_dict(shared_model.state_dict())
-                player.early_game_model.load_state_dict(shared_models[0].state_dict())
-                player.late_game_model.load_state_dict(shared_models[1].state_dict())
+                player.models[0].load_state_dict(shared_models[0].state_dict())
+                player.models[1].load_state_dict(shared_models[1].state_dict())
         else:
             # player.model.load_state_dict(shared_model.state_dict())
-            player.early_game_model.load_state_dict(shared_models[0].state_dict())
-            player.late_game_model.load_state_dict(shared_models[1].state_dict())
+            player.models[0].load_state_dict(shared_models[0].state_dict())
+            player.models[1].load_state_dict(shared_models[1].state_dict())
         if player.done:
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
@@ -78,7 +57,6 @@ def train(rank, args, shared_models, optimizers, env_conf):
 
         if player.done:
             state = player.env.reset()
-            # print("Game Resetting")
             player.state = torch.from_numpy(state).float()
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
@@ -86,7 +64,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
 
         R = torch.zeros(1, 1)
         if not player.done:
-            value, _, _ = player.model((Variable(player.state.unsqueeze(0)),
+            value, _, _ = player.models[player.curr_model_id]((Variable(player.state.unsqueeze(0)),
                                         (player.hx, player.cx)))
             R = value.data
 
@@ -95,8 +73,6 @@ def train(rank, args, shared_models, optimizers, env_conf):
                 R = R.cuda()
 
         # player.values.append(Variable(R))
-        policy_loss = 0
-        value_loss = 0
         gae = torch.zeros(1, 1)
         if gpu_id >= 0:
             with torch.cuda.device(gpu_id):
@@ -107,9 +83,11 @@ def train(rank, args, shared_models, optimizers, env_conf):
         # print("Length of model sequence vector", len(player.model_sequence))
         next_val = Variable(R)
         last_val = next_val
-        R_vec = [Variable(R), Variable(R), Variable(R), Variable(R)]
+        R_vec = [Variable(R), Variable(R)]
         last_id = player.model_sequence[-1]
-        P_vec, V_vec = [None, None], [None, None]
+        active_flags = [False, False]
+        policy_loss = [0, 0]
+        value_loss = [0, 0]
         for reward, value, model_id, log_prob, entropy in zip(
                 reversed(player.rewards),
                 reversed(player.values),
@@ -117,54 +95,31 @@ def train(rank, args, shared_models, optimizers, env_conf):
                 reversed(player.log_probs),
                 reversed(player.entropies)
         ):
+            active_flags[model_id] = True
             R_vec[model_id] = args.gamma * R_vec[model_id] + reward
+            R_vec[(model_id+1)%2] *= args.gamma
+
             advantage = R_vec[model_id] - value
-            value_loss += 0.5 * advantage.pow(2)
+            value_loss[model_id] += 0.5 * advantage.pow(2)
 
             delta_t = reward + args.gamma * next_val.data - value.data
             gae = gae * args.gamma * args.tau + delta_t
-            policy_loss -= (log_prob * Variable(gae) + 0.01 * entropy)
-
-            if model_id != last_id:
-                if P_vec[model_id] is not None:
-                    P_vec[model_id] += policy_loss
-                    V_vec[model_id] += value_loss
-                else:
-                    P_vec[model_id] = policy_loss
-                    V_vec[model_id] = value_loss
-                # player.models[model_id].zero_grad()
-                # (policy_loss + 0.5 * value_loss).backward(retain_graph=True)
-                # ensure_shared_grads(player.models[model_id], shared_models[model_id], gpu = gpu_id >= 0)
-                # optimizers[model_id].step()
-
-            last_id = model_id
-        
-        if P_vec[model_id] is not None:
-            P_vec[model_id] += policy_loss
-            V_vec[model_id] += value_loss
-        else:
-            P_vec[model_id] = policy_loss
-            V_vec[model_id] = value_loss
+            policy_loss[model_id] -= (log_prob * Variable(gae) + 0.01 * entropy)
 
         try:
-            if P_vec[0] is not None:
+            if active_flags[0] is True:
                 player.models[0].zero_grad()
-                (P_vec[0] + 0.5 * V_vec[0]).backward()
+                (policy_loss[0] + 0.5 * value_loss[0]).backward()
                 ensure_shared_grads(player.models[0], shared_models[0], gpu = gpu_id >= 0)
                 optimizers[0].step()
-            if P_vec[1] is not None:
+            if active_flags[1] is True:
                 player.models[1].zero_grad()
-                (P_vec[1] + 0.5 * V_vec[1]).backward()
+                (policy_loss[1] + 0.5 * value_loss[1]).backward()
                 ensure_shared_grads(player.models[1], shared_models[1], gpu = gpu_id >= 0)
                 optimizers[1].step()
         except Exception as e:
             print("Exception caught. Ignoring")
-            
-            state = player.env.reset()
-            # print("Game Resetting")
-            player.state = torch.from_numpy(state).float()
-            if gpu_id >= 0:
-                with torch.cuda.device(gpu_id):
-                    player.state = player.state.cuda()
-                    
+            if rank == 1:
+                print(rewards)
+                print(model_sequence)
         player.clear_actions()

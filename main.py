@@ -67,11 +67,11 @@ parser.add_argument(
     default='config.json',
     metavar='EC',
     help='environment to crop and resize info (default: config.json)')
-parser.add_argument(
-    '--shared-optimizer',
-    default=True,
-    metavar='SO',
-    help='use an optimizer without shared statistics.')
+# parser.add_argument(
+#     '--shared-optimizer',
+#     default=True,
+#     metavar='SO',
+#     help='use an optimizer without shared statistics.')
 parser.add_argument(
     '--load', default=False, metavar='L', help='load a trained model')
 parser.add_argument(
@@ -140,28 +140,28 @@ if __name__ == '__main__':
     ]
     if args.load:
         saved_state = torch.load(
-            '{0}{1}.dat'.format(args.load_model_dir, args.env),
+            '{0}{1}_early.dat'.format(args.load_model_dir, args.env),
             map_location=lambda storage, loc: storage)
         shared_models[0].load_state_dict(saved_state)
+        saved_state = torch.load(
+            '{0}{1}_late.dat'.format(args.load_model_dir, args.env),
+            map_location=lambda storage, loc: storage)
         shared_models[1].load_state_dict(saved_state)
     shared_models[0].share_memory()
     shared_models[1].share_memory()
 
-    if args.shared_optimizer:
-        if args.optimizer == 'RMSprop':
-            optimizers = [
-                SharedRMSprop(shared_models[0].parameters(), lr=args.lr),
-                SharedRMSprop(shared_models[1].parameters(), lr=args.lr)
-            ]
-        if args.optimizer == 'Adam':
-            optimizers = [
-                SharedAdam(shared_models[0].parameters(), lr=args.lr, amsgrad=args.amsgrad),
-                SharedAdam(shared_models[1].parameters(), lr=args.lr, amsgrad=args.amsgrad)
-            ]
-        optimizers[0].share_memory()
-        optimizers[1].share_memory()
-    else:
-        optimizers = None
+    if args.optimizer == 'RMSprop':
+        optimizers = [
+            SharedRMSprop(shared_models[0].parameters(), lr=args.lr),
+            SharedRMSprop(shared_models[1].parameters(), lr=args.lr)
+        ]
+    if args.optimizer == 'Adam':
+        optimizers = [
+            SharedAdam(shared_models[0].parameters(), lr=args.lr, amsgrad=args.amsgrad),
+            SharedAdam(shared_models[1].parameters(), lr=args.lr, amsgrad=args.amsgrad)
+        ]
+    optimizers[0].share_memory()
+    optimizers[1].share_memory()
 
     processes = []
 

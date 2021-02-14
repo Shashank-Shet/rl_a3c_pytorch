@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import copy
 from torch.autograd import Variable
 from time import sleep
-
+from model import A3Clstm
 
 TILES_REFILL_THRESHOLD_SCORE = 432
 GAME_STAGE_CHANGEOVER_THRESHOLD = 300
@@ -14,14 +14,16 @@ GAME_STAGE_CHANGEOVER_THRESHOLD = 300
 
 
 class Agent(object):
-    def __init__(self, model, env, args, state):
+    def __init__(self, env, args, gpu_id):
         self.results_filename = "./results"
-        self.early_game_model = model
-        self.late_game_model = None
-        self.models = [self.early_game_model, self.late_game_model]
-        self.model = self.early_game_model
         self.env = env
-        self.state = state
+        self.models = [
+            A3Clstm(self.env.observation_space.shape[0],
+                    self.env.action_space),
+            A3Clstm(self.env.observation_space.shape[0],
+                    self.env.action_space)
+        ]
+        self.state = None
         self.hx = None
         self.cx = None
         self.eps_len = 0
@@ -33,27 +35,21 @@ class Agent(object):
         self.done = True
         self.info = None
         self.reward = 0
-        self.gpu_id = -1
+        self.gpu_id = gpu_id
         self.episodic_reward = 0
         self.life_counter = 5
         self.model_sequence = []
         self.curr_model_id = 0
         self.first_time_changeover = True
-        self.next_action_fire = True
-
-    def test_models(self):
-        print(self.model)
-        print(self.early_game_model)
-        print(self.late_game_model)
-
-    def set_model(self, model):
-        self.early_game_model = model
-        self.late_game_model  = copy.deepcopy(model)
-        self.model = self.early_game_model
-        self.models = [self.early_game_model, self.late_game_model]
+        if self.gpu_id >= 0:
+            with torch.cuda.device(self.gpu_id):
+                self.models[0] = self.models[0].cuda()
+                self.models[1] = self.models[1].cuda()
+        with open(self.results_filename, 'w'):
+            pass
 
     def action_train(self):
-        value, logit, (self.hx, self.cx) = self.model((Variable(
+        value, logit, (self.hx, self.cx) = self.models[self.curr_model_id]((Variable(
             self.state.unsqueeze(0)), (self.hx, self.cx)))
         prob = F.softmax(logit, dim=1)
         log_prob = F.log_softmax(logit, dim=1)
@@ -64,27 +60,17 @@ class Agent(object):
         state, self.reward, self.done, self.info = self.env.step(
             action.cpu().numpy())
 
-        # Extra code for book-keeping progress of rewards in training.
-        # Note: Training allows only 1 life for the agent
-        if self.done is True:
-            self.life_counter = 0
-        self.episodic_reward += self.reward
-
         # Extra code to switch between models based on score
         if self.episodic_reward == 0:
-            self.model = self.early_game_model
             self.curr_model_id = 0
         elif self.episodic_reward == GAME_STAGE_CHANGEOVER_THRESHOLD:
             if self.first_time_changeover:
                 self.late_game_model = copy.deepcopy(self.early_game_model)
                 self.first_time_changeover = False
-            self.model = self.late_game_model
             self.curr_model_id = 1
         elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE:
-            self.model = self.early_game_model
             self.curr_model_id = 0
         elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE + GAME_STAGE_CHANGEOVER_THRESHOLD:
-            self.model = self.late_game_model
             self.curr_model_id = 1
 
         self.state = torch.from_numpy(state).float()
@@ -113,48 +99,22 @@ class Agent(object):
             else:
                 self.cx = Variable(self.cx.data)
                 self.hx = Variable(self.hx.data)
-            value, logit, (self.hx, self.cx) = self.model((Variable(
+            value, logit, (self.hx, self.cx) = self.models[self.curr_model_id]((Variable(
                 self.state.unsqueeze(0)), (self.hx, self.cx)))
         prob = F.softmax(logit, dim=1)
-        if self.next_action_fire is False:
-            action = prob.max(1)[1].data.cpu().numpy()
-        else:
-            action = [1]
+        action = prob.max(1)[1].data.cpu().numpy()
         state, self.reward, self.done, self.info = self.env.step(action[0])
         # self.env.render()
         # sleep(0.005)
         # print(f"ACTION: {action[0]} DONE? {self.done}  INFO: {self.info}")
 
-        if self.done is True:
-            self.next_action_fire = True
-            self.life_counter -= 1
-            if self.life_counter == 0:
-                with open(self.results_filename, 'a') as f:
-                    line = f"{self.episodic_reward}\n"
-                    f.write(line)
- #               print("Episodic reward: ", self.episodic_reward)
-                self.episodic_reward = 0
-                self.life_counter = 5
-        else:
-            self.next_action_fire = False
-
-        self.episodic_reward += self.reward
-
-
         if self.episodic_reward == 0:
-            self.model = self.early_game_model
             self.curr_model_id = 0
         elif self.episodic_reward == GAME_STAGE_CHANGEOVER_THRESHOLD:
-            # if self.first_time_changeover:
-            #     self.late_game_model = copy.deepcopy(self.early_game_model)
-            #     self.first_time_changeover = False
-            self.model = self.late_game_model
             self.curr_model_id = 1
         elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE:
-            self.model = self.early_game_model
             self.curr_model_id = 0
         elif self.episodic_reward == TILES_REFILL_THRESHOLD_SCORE + GAME_STAGE_CHANGEOVER_THRESHOLD:
-            self.model = self.late_game_model
             self.curr_model_id = 1
 
 

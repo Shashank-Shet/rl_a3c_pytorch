@@ -30,34 +30,27 @@ def test(args, shared_models, env_conf):
     start_time = time.time()
     num_tests = 0
     reward_total_sum = 0
-    player = Agent(None, env, args, None)
-    player.gpu_id = gpu_id
-#    player.model = A3Clstm(player.env.observation_space.shape[0],
-#                           player.env.action_space)
-    player.set_model(A3Clstm(player.env.observation_space.shape[0],
-                           player.env.action_space))
+    player = Agent(env, args, gpu_id)
     player.state = player.env.reset()
     player.eps_len += 2
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
-            player.early_game_model = player.early_game_model.cuda()
-            player.late_game_model  = player.late_game_model.cuda()
-            player.models = [player.early_game_model, player.late_game_model]
             player.state = player.state.cuda()
     flag = True
     max_score = 0
+    prev_reward = 0
     while True:
         if flag:
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
-                    player.early_game_model.load_state_dict(shared_models[0].state_dict())
-                    player.late_game_model.load_state_dict(shared_models[1].state_dict())
+                    player.models[0].load_state_dict(shared_models[0].state_dict())
+                    player.models[1].load_state_dict(shared_models[1].state_dict())
             else:
-                player.early_game_model.load_state_dict(shared_models[0].state_dict())
-                player.late_game_model.load_state_dict(shared_models[1].state_dict())
-            player.early_game_model.eval()
-            player.late_game_model.eval()
+                player.models[0].load_state_dict(shared_models[0].state_dict())
+                player.models[1].load_state_dict(shared_models[1].state_dict())
+            player.models[0].eval()
+            player.models[1].eval()
             flag = False
 
         player.action_test()
@@ -81,17 +74,26 @@ def test(args, shared_models, env_conf):
                     time.strftime("%Hh %Mm %Ss",
                                   time.gmtime(time.time() - start_time)),
                     reward_sum, player.eps_len, reward_mean))
-
+            with open('./results','a') as f:
+                line = f"{reward_total_sum - prev_reward}\n"
+                f.write(line)
+                prev_reward = reward_total_sum
             if args.save_max and reward_sum >= max_score:
                 max_score = reward_sum
                 if gpu_id >= 0:
                     with torch.cuda.device(gpu_id):
-                        state_to_save = player.model.state_dict()
-                        torch.save(state_to_save, '{0}{1}.dat'.format(
+                        state_to_save = player.models[0].state_dict()
+                        torch.save(state_to_save, '{0}{1}_early.dat'.format(
+                            args.save_model_dir, args.env))
+                        state_to_save = player.models[1].state_dict()
+                        torch.save(state_to_save, '{0}{1}_late.dat'.format(
                             args.save_model_dir, args.env))
                 else:
-                    state_to_save = player.model.state_dict()
-                    torch.save(state_to_save, '{0}{1}.dat'.format(
+                    state_to_save = player.models[0].state_dict()
+                    torch.save(state_to_save, '{0}{1}_early.dat'.format(
+                        args.save_model_dir, args.env))
+                    state_to_save = player.models[1].state_dict()
+                    torch.save(state_to_save, '{0}{1}_late.dat'.format(
                         args.save_model_dir, args.env))
 
             reward_sum = 0
