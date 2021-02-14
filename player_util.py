@@ -39,7 +39,7 @@ class Agent(object):
         self.model_sequence = []
         self.curr_model_id = 0
         self.first_time_changeover = True
-        self.next_action_fire = False
+        self.next_action_fire = True
 
     def test_models(self):
         print(self.model)
