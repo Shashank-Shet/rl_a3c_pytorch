@@ -15,6 +15,7 @@ GAME_STAGE_CHANGEOVER_THRESHOLD = 300
 
 class Agent(object):
     def __init__(self, model, env, args, state):
+        self.results_filename = "./results"
         self.early_game_model = model
         self.late_game_model = None
         self.models = [self.early_game_model, self.late_game_model]
@@ -128,6 +129,9 @@ class Agent(object):
             self.next_action_fire = True
             self.life_counter -= 1
             if self.life_counter == 0:
+                with open(self.results_filename, 'a') as f:
+                    line = f"{self.episodic_reward}\n"
+                    f.write(line)
  #               print("Episodic reward: ", self.episodic_reward)
                 self.episodic_reward = 0
                 self.life_counter = 5
