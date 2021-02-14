@@ -1,20 +1,42 @@
-2021-02-07 19:18:06,914 : lr: 0.0001
-2021-02-07 19:18:06,916 : gamma: 0.99
-2021-02-07 19:18:06,916 : tau: 1.0
-2021-02-07 19:18:06,916 : seed: 1
-2021-02-07 19:18:06,916 : workers: 2
-2021-02-07 19:18:06,916 : num_steps: 20
-2021-02-07 19:18:06,916 : max_episode_length: 10000
-2021-02-07 19:18:06,916 : env: Breakout-v0
-2021-02-07 19:18:06,916 : env_config: config.json
-2021-02-07 19:18:06,916 : shared_optimizer: True
-2021-02-07 19:18:06,916 : load: False
-2021-02-07 19:18:06,917 : save_max: True
-2021-02-07 19:18:06,917 : optimizer: Adam
-2021-02-07 19:18:06,917 : load_model_dir: trained_models/
-2021-02-07 19:18:06,917 : save_model_dir: trained_models/
-2021-02-07 19:18:06,917 : log_dir: logs/
-2021-02-07 19:18:06,917 : gpu_ids: [-1]
-2021-02-07 19:18:06,917 : amsgrad: True
-2021-02-07 19:18:06,917 : skip_rate: 4
-2021-02-07 19:18:08,645 : Time 00h 00m 01s, episode reward 0.0, episode length 162, reward mean 0.0000
+2021-02-14 13:21:18,484 : lr: 0.0001
+2021-02-14 13:21:18,486 : gamma: 0.99
+2021-02-14 13:21:18,486 : tau: 1.0
+2021-02-14 13:21:18,486 : seed: 1
+2021-02-14 13:21:18,486 : workers: 3
+2021-02-14 13:21:18,486 : num_steps: 20
+2021-02-14 13:21:18,486 : max_episode_length: 10000
+2021-02-14 13:21:18,486 : env: Breakout-v0
+2021-02-14 13:21:18,486 : env_config: config.json
+2021-02-14 13:21:18,487 : shared_optimizer: True
+2021-02-14 13:21:18,487 : load: False
+2021-02-14 13:21:18,487 : save_max: True
+2021-02-14 13:21:18,487 : optimizer: Adam
+2021-02-14 13:21:18,487 : load_model_dir: trained_models/
+2021-02-14 13:21:18,487 : save_model_dir: trained_models/
+2021-02-14 13:21:18,487 : log_dir: logs/
+2021-02-14 13:21:18,487 : gpu_ids: [-1]
+2021-02-14 13:21:18,487 : amsgrad: True
+2021-02-14 13:21:18,487 : skip_rate: 4
+2021-02-14 13:21:22,927 : Time 00h 00m 04s, episode reward 2.0, episode length 261, reward mean 2.0000
+2021-02-14 13:21:38,046 : Time 00h 00m 19s, episode reward 2.0, episode length 263, reward mean 2.0000
+2021-02-14 13:21:50,797 : Time 00h 00m 32s, episode reward 0.0, episode length 158, reward mean 1.3333
+2021-02-14 13:22:05,787 : Time 00h 00m 47s, episode reward 2.0, episode length 256, reward mean 1.5000
+2021-02-14 13:22:21,974 : Time 00h 01m 03s, episode reward 2.0, episode length 261, reward mean 1.6000
+2021-02-14 13:22:35,189 : Time 00h 01m 16s, episode reward 0.0, episode length 164, reward mean 1.3333
+2021-02-14 13:22:50,499 : Time 00h 01m 31s, episode reward 2.0, episode length 265, reward mean 1.4286
+2021-02-14 13:23:05,840 : Time 00h 01m 47s, episode reward 2.0, episode length 265, reward mean 1.5000
+2021-02-14 13:23:22,796 : Time 00h 02m 04s, episode reward 3.0, episode length 327, reward mean 1.6667
+2021-02-14 13:23:38,545 : Time 00h 02m 19s, episode reward 2.0, episode length 269, reward mean 1.7000
+2021-02-14 13:27:04,952 : Time 00h 05m 46s, episode reward 0.0, episode length 9998, reward mean 1.5455
+2021-02-14 13:27:20,493 : Time 00h 06m 01s, episode reward 2.0, episode length 267, reward mean 1.5833
+2021-02-14 13:27:36,200 : Time 00h 06m 17s, episode reward 2.0, episode length 258, reward mean 1.6154
+2021-02-14 13:27:50,561 : Time 00h 06m 31s, episode reward 2.0, episode length 259, reward mean 1.6429
+2021-02-14 13:28:06,476 : Time 00h 06m 47s, episode reward 3.0, episode length 324, reward mean 1.7333
+2021-02-14 13:28:19,643 : Time 00h 07m 00s, episode reward 0.0, episode length 166, reward mean 1.6250
+2021-02-14 13:28:33,432 : Time 00h 07m 14s, episode reward 1.0, episode length 204, reward mean 1.5882
+2021-02-14 13:28:49,648 : Time 00h 07m 30s, episode reward 3.0, episode length 321, reward mean 1.6667
+2021-02-14 13:29:04,278 : Time 00h 07m 45s, episode reward 2.0, episode length 265, reward mean 1.6842
+2021-02-14 13:29:19,073 : Time 00h 08m 00s, episode reward 2.0, episode length 247, reward mean 1.7000
+2021-02-14 13:29:34,282 : Time 00h 08m 15s, episode reward 2.0, episode length 261, reward mean 1.7143
+2021-02-14 13:29:49,993 : Time 00h 08m 31s, episode reward 3.0, episode length 299, reward mean 1.7727
+2021-02-14 13:30:07,367 : Time 00h 08m 48s, episode reward 4.0, episode length 352, reward mean 1.8696

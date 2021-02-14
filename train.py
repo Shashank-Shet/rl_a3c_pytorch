@@ -159,6 +159,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
                 optimizers[1].step()
         except Exception as e:
             print("Exception caught. Ignoring")
+            
             state = player.env.reset()
             # print("Game Resetting")
             player.state = torch.from_numpy(state).float()
