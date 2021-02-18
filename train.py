@@ -110,6 +110,8 @@ def train(rank, args, shared_models, optimizers, env_conf):
             gae = gae * args.gamma * args.tau + delta_t
             policy_loss[model_id] -= (log_prob * Variable(gae) + 0.01 * entropy)
 
+            next_val = value
+
         try:
             if active_flags[0] is True:
                 player.models[0].zero_grad()
