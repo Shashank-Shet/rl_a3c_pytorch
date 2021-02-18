@@ -55,8 +55,8 @@ def train(rank, args, shared_models, optimizers, env_conf):
             if player.done:
                 break
 
-        if rank == 0:
-            print(player.episodic_reward)
+        # if rank == 0:
+        #     print(player.episodic_reward)
         player.episodic_reward = 0
 
         if player.done:
@@ -88,7 +88,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
         next_val = Variable(R)
         last_val = next_val
         R_vec = [Variable(R), Variable(R)]
-        last_id = player.model_sequence[-1]
+        # last_id = player.model_sequence[-1]
         active_flags = [False, False]
         policy_loss = [0, 0]
         value_loss = [0, 0]
