@@ -55,6 +55,8 @@ def train(rank, args, shared_models, optimizers, env_conf):
             if player.done:
                 break
 
+        if rank == 0:
+            print(player.episodic_reward)
         player.episodic_reward = 0
 
         if player.done:
