@@ -74,11 +74,14 @@ def test(args, shared_models, env_conf):
                     time.strftime("%Hh %Mm %Ss",
                                   time.gmtime(time.time() - start_time)),
                     reward_sum, player.eps_len, reward_mean))
+            ##############################################################
             with open('./results','a') as f:
                 line = f"{reward_total_sum - prev_reward}\n"
                 f.write(line)
                 prev_reward = reward_total_sum
             player.episodic_reward = 0
+            player.fire_action_next = True
+            ##############################################################
             if args.save_max and reward_sum >= max_score:
                 max_score = reward_sum
                 if gpu_id >= 0:
