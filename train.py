@@ -92,6 +92,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
         active_flags = [False, False]
         policy_loss = [0, 0]
         value_loss = [0, 0]
+        sum_reward = 0
         for reward, value, model_id, log_prob, entropy in zip(
                 reversed(player.rewards),
                 reversed(player.values),
@@ -99,9 +100,13 @@ def train(rank, args, shared_models, optimizers, env_conf):
                 reversed(player.log_probs),
                 reversed(player.entropies)
         ):
+            sum_reward += reward
             active_flags[model_id] = True
-            R_vec[model_id] = args.gamma * R_vec[model_id] + reward
-            R_vec[(model_id+1)%2] *= args.gamma
+            # R_vec[model_id] = args.gamma * R_vec[model_id] + reward
+            # R_vec[(model_id+1)%2] *= args.gamma
+
+            R_vec[model_id] = sum_reward
+            sum_reward *= args.gamma
 
             advantage = R_vec[model_id] - value
             value_loss[model_id] += 0.5 * advantage.pow(2)
