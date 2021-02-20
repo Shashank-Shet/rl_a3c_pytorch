@@ -57,6 +57,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
 
         # if rank == 0:
         #     print(player.episodic_reward)
+        # print(player.episodic_reward)
         player.episodic_reward = 0
 
         if player.done:
@@ -92,7 +93,7 @@ def train(rank, args, shared_models, optimizers, env_conf):
         active_flags = [False, False]
         policy_loss = [0, 0]
         value_loss = [0, 0]
-        sum_reward = 0
+        sum_reward = Variable(R)
         for reward, value, model_id, log_prob, entropy in zip(
                 reversed(player.rewards),
                 reversed(player.values),
